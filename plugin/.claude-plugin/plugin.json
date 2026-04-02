@@ -13,8 +13,8 @@
     }
   },
   "skills": [
-    "./skills/learn/SKILL.md",
-    "./skills/verify/SKILL.md",
-    "./skills/canvas/SKILL.md"
+    "../skills/learn",
+    "../skills/verify",
+    "../skills/canvas"
   ]
 }
