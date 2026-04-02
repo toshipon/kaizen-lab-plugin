@@ -1,0 +1,22 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "kaizen-lab",
+  "description": "KaizenLab — hypothesis validation platform. Record learnings, manage canvases, and run PMF validation cycles directly from Claude Code.",
+  "owner": {
+    "name": "toshipon",
+    "url": "https://kaizen-lab.buildgeeks.dev"
+  },
+  "plugins": [
+    {
+      "name": "kaizen-lab",
+      "description": "Connect to KaizenLab via MCP (56 tools) with slash commands: /kaizen-lab:learn, /kaizen-lab:verify, /kaizen-lab:canvas",
+      "version": "1.0.0",
+      "author": {
+        "name": "toshipon",
+        "email": "toshipon123@gmail.com"
+      },
+      "source": ".",
+      "category": "productivity"
+    }
+  ]
+}

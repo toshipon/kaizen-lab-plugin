@@ -1,0 +1,20 @@
+{
+  "name": "kaizen-lab",
+  "version": "1.0.0",
+  "description": "Hypothesis validation platform. Record learnings, manage canvases, and run PMF validation cycles directly from Claude Code.",
+  "author": {
+    "name": "KaizenLab",
+    "url": "https://kaizen-lab.buildgeeks.dev"
+  },
+  "mcpServers": {
+    "kaizen-lab": {
+      "type": "http",
+      "url": "https://kaizen-lab.buildgeeks.dev/api/mcp"
+    }
+  },
+  "skills": [
+    "./skills/learn/SKILL.md",
+    "./skills/verify/SKILL.md",
+    "./skills/canvas/SKILL.md"
+  ]
+}
