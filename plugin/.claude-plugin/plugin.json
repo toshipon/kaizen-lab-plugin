@@ -13,8 +13,8 @@
     }
   },
   "skills": [
-    "../skills/learn",
-    "../skills/verify",
-    "../skills/canvas"
+    "./skills/learn",
+    "./skills/verify",
+    "./skills/canvas"
   ]
 }
