@@ -1,6 +1,6 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "buildgeeks",
+  "name": "kaizen-lab",
   "description": "KaizenLab \u2014 hypothesis validation platform. Record learnings, manage canvases, and run PMF validation cycles directly from Claude Code.",
   "owner": {
     "name": "toshipon",

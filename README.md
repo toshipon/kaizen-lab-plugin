@@ -10,7 +10,7 @@ Records learnings, manages canvases, and runs PMF validation cycles — all via 
 claude plugin marketplace add toshipon/kaizen-lab-plugin
 
 # Step 2: Install
-claude plugin install kaizen-lab@buildgeeks
+claude plugin install kaizen-lab@kaizen-lab
 ```
 
 On first use, your browser opens for Google sign-in. Token is issued automatically (no API key needed).
