@@ -40,6 +40,50 @@ If you just want the MCP server without slash commands:
 claude mcp add --transport http kaizen-lab https://kaizen-lab.buildgeeks.dev/api/mcp
 ```
 
+## Install via APM
+
+The skills are also distributed through [APM (Agent Package Manager)](https://github.com/microsoft/apm), so you can pull them into any APM-compatible agent (Claude Code, Copilot, Cursor, Codex...).
+
+Add the skills you want to your project's `apm.yml`:
+
+```yaml
+name: your-project
+version: 1.0.0
+dependencies:
+  apm:
+    # All three skills
+    - toshipon/kaizen-lab-plugin/skills/kaizen-lab/learn
+    - toshipon/kaizen-lab-plugin/skills/kaizen-lab/verify
+    - toshipon/kaizen-lab-plugin/skills/kaizen-lab/canvas
+  mcp:
+    - name: kaizen-lab
+      registry: false
+      transport: http
+      url: https://kaizen-lab.buildgeeks.dev/api/mcp
+```
+
+Then run:
+
+```bash
+apm install
+```
+
+Pin a specific version with `#v1.2.0` (or any git ref):
+
+```yaml
+- toshipon/kaizen-lab-plugin/skills/kaizen-lab/learn#v1.2.0
+```
+
+Or install the whole skill bundle at once:
+
+```yaml
+dependencies:
+  apm:
+    - toshipon/kaizen-lab-plugin#v1.2.0
+```
+
+> APM will deploy the skills into your agent's expected location (e.g. `.claude/skills/`). The MCP server is configured automatically from the `mcp` block.
+
 ## Links
 
 - 🌐 [kaizen-lab.buildgeeks.dev](https://kaizen-lab.buildgeeks.dev)
