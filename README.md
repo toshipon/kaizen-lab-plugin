@@ -25,6 +25,7 @@ On first use, your browser opens for Google sign-in. Token is issued automatical
 | `/kaizen-lab:learn [insight]` | Record a learning from the current session |
 | `/kaizen-lab:verify` | Check verification status across hypotheses |
 | `/kaizen-lab:canvas` | View or update the hypothesis canvas |
+| `/kaizen-lab:roadmap` | View, plan, and update the project roadmap |
 
 ## What it does
 
@@ -51,10 +52,11 @@ name: your-project
 version: 1.0.0
 dependencies:
   apm:
-    # All three skills
+    # All four skills
     - toshipon/kaizen-lab-plugin/skills/kaizen-lab/learn
     - toshipon/kaizen-lab-plugin/skills/kaizen-lab/verify
     - toshipon/kaizen-lab-plugin/skills/kaizen-lab/canvas
+    - toshipon/kaizen-lab-plugin/skills/kaizen-lab/roadmap
   mcp:
     - name: kaizen-lab
       registry: false
@@ -68,10 +70,10 @@ Then run:
 apm install
 ```
 
-Pin a specific version with `#v1.2.0` (or any git ref):
+Pin a specific version with `#v1.3.0` (or any git ref):
 
 ```yaml
-- toshipon/kaizen-lab-plugin/skills/kaizen-lab/learn#v1.2.0
+- toshipon/kaizen-lab-plugin/skills/kaizen-lab/learn#v1.3.0
 ```
 
 Or install the whole skill bundle at once:
@@ -79,7 +81,7 @@ Or install the whole skill bundle at once:
 ```yaml
 dependencies:
   apm:
-    - toshipon/kaizen-lab-plugin#v1.2.0
+    - toshipon/kaizen-lab-plugin#v1.3.0
 ```
 
 > APM will deploy the skills into your agent's expected location (e.g. `.claude/skills/`). The MCP server is configured automatically from the `mcp` block.
