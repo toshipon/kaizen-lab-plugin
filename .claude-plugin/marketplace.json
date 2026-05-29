@@ -9,8 +9,8 @@
   "plugins": [
     {
       "name": "kaizen-lab",
-      "description": "Connect to KaizenLab via MCP (56 tools) with slash commands: /kaizen-lab:learn, /kaizen-lab:verify, /kaizen-lab:canvas, /kaizen-lab:roadmap",
-      "version": "1.3.0",
+      "description": "Connect to KaizenLab via MCP (56 tools) with an overview guide and slash commands: /kaizen-lab:overview, /kaizen-lab:learn, /kaizen-lab:verify, /kaizen-lab:canvas, /kaizen-lab:roadmap",
+      "version": "1.4.0",
       "author": {
         "name": "toshipon",
         "email": "toshipon123@gmail.com"
