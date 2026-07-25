@@ -1,6 +1,6 @@
 {
   "name": "kaizen-lab",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Hypothesis validation platform. Record learnings, manage canvases, plan the roadmap, and run PMF validation cycles directly from Claude Code.",
   "author": {
     "name": "KaizenLab",

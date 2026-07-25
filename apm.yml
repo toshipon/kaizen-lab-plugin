@@ -1,5 +1,5 @@
 name: kaizen-lab
-version: 1.4.0
+version: 1.4.1
 description: KaizenLab hypothesis validation skills — an overview guide plus record learnings, manage canvases, plan the roadmap, and run PMF validation cycles from any APM-compatible agent.
 author: toshipon
 license: MIT
