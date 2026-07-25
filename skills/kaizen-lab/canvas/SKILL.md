@@ -35,6 +35,14 @@ If `$ARGUMENTS` starts with `new` followed by a title:
 ## Field reference
 `purpose`, `vision`, `valueProposition`, `obviousProblem`, `latentProblem`, `means`, `advantage`, `metrics`, `revenueModel`, `marketSize`, `situation`, `trend`, `alternatives`, `channel`
 
+These 14 values are the `field_id` enum for `add_sticky_note` / `update_sticky_note`.
+
+To append context to an existing note without overwriting it, pass `supplementary_note` and omit `text`.
+
+> **Not the same as the verification canvas.** The hypothesis canvas ("what we believe") uses these flat `field_id` values via sticky notes. The verification canvas ("how we will check it") uses a nested `sections` object with an entirely different schema — see `/kaizen-lab:verify` and [../overview/references/api.md](../overview/references/api.md). Mixing the two silently drops the content.
+
+Full MCP tool reference with argument shapes: [../overview/references/api.md](../overview/references/api.md).
+
 ## Example
 
 ```

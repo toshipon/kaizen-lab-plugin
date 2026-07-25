@@ -131,6 +131,24 @@ UIは **Why/How/What ウィザード** 形式。`sections` にフラットなデ
 - `successMetrics[].type` は `"quantitative"` か `"qualitative"`
 - `how.method` は6種の enum 値のみ
 
+##### ⚠️ `sections` は全置換（マージではない）
+
+`update_verification_canvas` に `sections` を渡すと **トップレベルが丸ごと置き換わる**。
+`{ "what": {...} }` だけを渡すと **既存の `why` と `how` は黙って消える**。
+
+部分更新をしたい場合は必ず `get_verification_canvas` で現在値を読み、マージした完全なオブジェクトを渡すこと。
+
+また、**未知のキーはエラーにならず黙って破棄される**。キー名を1文字間違えるだけで内容が失われ、警告も出ない。推測せず上記のスキーマ表に従うこと。
+
+型が混在している点にも注意:
+
+| キー | 型 |
+|------|-----|
+| `what.qualitativeResults` | **文字列** |
+| `what.quantitativeResults` | **配列** |
+| `what.nextAction` | **オブジェクト** `{ type, description }` |
+| `what.learnings` | **配列** |
+
 ### Learnings
 | Tool | Description | Required Args |
 |------|-------------|---------------|
