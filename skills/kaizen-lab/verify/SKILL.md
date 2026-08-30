@@ -22,6 +22,7 @@ Run `/kaizen-lab:verify` to see which hypotheses need validation, update verific
    - ❌ `invalidated` — disproven hypotheses
 4. Highlight any `in-progress` items that are blocking progress.
 5. Treat a `validated` canvas whose `sections` are empty as **not** validated — flag it. A status without recorded evidence is a false positive and will mislead every later decision.
+6. For every `validated` / `invalidated` canvas, call `get_verification_canvas` and check `what.qualitativeResults`. List every one that shows **未記入** under "⚠️ 結果未記録" and offer to backfill it (see "Backfill" below). Do not hide these — a closed canvas with no written result is the most common data-quality bug in this tool.
 
 ### With arguments — update a verification
 If `$ARGUMENTS` contains a status update (e.g. `"validated: login conversion improved 20%"`):
@@ -30,7 +31,28 @@ If `$ARGUMENTS` contains a status update (e.g. `"validated: login conversion imp
 3. Call `update_verification_canvas` with:
    - `status`: `validated` or `invalidated`
    - `sections`: the **merged** object, with findings in `what.qualitativeResults` and the decision in `what.nextAction`
-4. Prompt to record a learning with `/kaizen-lab:learn`.
+4. **Read back** with `get_verification_canvas` and confirm 定性結果 / 次のアクション no longer show 未記入. If they do, the key path was wrong — fix and resend.
+5. Prompt to record a learning with `/kaizen-lab:learn`.
+
+## 🚦 Completion gate — never close a canvas without a written result
+
+Setting `status` to `validated` or `invalidated` — **whether via this skill or by calling `update_verification_canvas` directly** — is only allowed when the same call also carries all of the following in `sections.what`:
+
+| Field | Must contain |
+|---|---|
+| `qualitativeResults` (string) | **The result in words**: (1) the one-line verdict, (2) *why* — the mechanism or structural reason the outcome came out this way, (3) caveats — power/MDE, population, anything that limits the conclusion, (4) implementation notes if a bug or dead knob was discovered along the way. This is the part a future reader needs and numbers alone cannot give; it is the field most often left empty. |
+| `quantitativeResults` (array) | One `{ id, metricName, expected, actual }` per headline number (e.g. Δ期待値 with CI, trade count, sizedDD). |
+| `nextAction` (object) | `{ type: pivot \| persevere \| stop, description }` — what changes in production / what gets tried next. |
+
+A `validated`/`invalidated` status with `qualitativeResults` empty is a **defect**, not a shortcut: close it later, or leave it `in-progress` until the write-up exists. Before every status-closing call, ask "would someone reading only this canvas understand what happened and why?" — if not, the write-up is not done.
+
+Do **not** stash results in `why.purpose`, `how.mvpDefinition`, or a flat top-level key. Those either misfile the content or (for flat keys) silently discard it — the canvas then renders 未記入 even though something was sent.
+
+### Backfill — filling results on already-closed canvases
+When a closed canvas has 未記入 in 定性結果:
+1. `get_verification_canvas` and keep the existing `why` / `how`.
+2. Reconstruct the write-up from the best available source (project CLAUDE.md notes, measurement scripts, `out/` JSON, git log, chat history). If the numbers cannot be recovered, say so inside `qualitativeResults` rather than inventing them.
+3. Send the merged `sections` (status unchanged) and read back.
 
 > There is **no `result_summary` parameter**. `update_verification_canvas` accepts only `canvas_id`, `name`, `sections`, and `status`. Writing a summary anywhere else silently discards it.
 
@@ -82,3 +104,8 @@ Full spec with JSON examples: [../overview/references/api.md](../overview/refere
 /kaizen-lab:verify validated — A/B test showed 15% lift in activation
 ```
 → Merges into the existing `sections`, writes the finding to `what.qualitativeResults`, sets `what.nextAction` to `{ type: "persevere", description: "..." }`, and marks the canvas `validated`
+
+```
+/kaizen-lab:verify backfill
+```
+→ Lists closed canvases whose 定性結果 is 未記入 and fills them one by one from available sources

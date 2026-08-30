@@ -33,6 +33,8 @@ Run `/kaizen-lab:learn` at the end of a coding session, experiment, or after dis
 
 5. **Confirm**: Show the user what was recorded with a ✅ and the learning ID.
 
+6. **Close the loop with the canvas**: if the learning came from a verification canvas, check that canvas's `what.qualitativeResults` is filled (`get_verification_canvas`). A learning recorded while the source canvas still shows 定性結果 未記入 leaves the evidence disconnected — fill the canvas via `/kaizen-lab:verify` in the same session.
+
 ## Example
 
 ```
