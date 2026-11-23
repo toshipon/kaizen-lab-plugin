@@ -13,7 +13,7 @@ API キーは Settings 画面で発行。
 
 ### Protocol Flow
 1. `initialize` → サーバー情報取得
-2. `tools/list` → 利用可能ツール一覧 (56ツール)
+2. `tools/list` → 利用可能ツール一覧 (70ツール)
 3. `tools/call` → ツール実行
 
 ### Example
@@ -40,7 +40,9 @@ curl -X POST https://kaizen-lab.buildgeeks.dev/api/mcp \
 
 ---
 
-## Available MCP Tools (56)
+## Available MCP Tools (70)
+
+表の引数の欄は必須の引数を並べる。`?` を付けたものは任意で、その他の任意の引数は `tools/list` の inputSchema を見る。
 
 ### Projects
 | Tool | Description | Required Args |
@@ -62,6 +64,7 @@ curl -X POST https://kaizen-lab.buildgeeks.dev/api/mcp \
 | `delete_canvas` | 仮説キャンバス削除（関連付箋も削除） | `canvas_id` |
 | `get_pmf_score` | PMFスコア取得 | `project_id` |
 | `analyze_competitors` | 仮説キャンバスを元にAI競合分析を実行しDBに保存 | `canvas_id` |
+| `show_canvas_app` | MCP Apps 対応ホスト内で仮説キャンバスを read-only UI 表示（非対応ホストでは `get_canvas` と同じテキストを返す） | `canvas_id` |
 
 `create_canvas` の `fields` オプション:
 ```json
@@ -85,6 +88,15 @@ curl -X POST https://kaizen-lab.buildgeeks.dev/api/mcp \
 
 ステータス: `not-started` | `in-progress` | `validated` | `invalidated`
 
+#### Optional Args（create / update 共通）
+
+| Arg | 説明 |
+|-----|------|
+| `hypothesis_canvas_id` | 紐付ける仮説キャンバスID。update では `null` で解除 |
+| `sticky_note_id` | 紐付ける付箋ID。`hypothesis_canvas_id` の付箋であること。update では `null` で解除 |
+| `verification_phase` | `problem-fit` \| `solution-fit` \| `channel-fit` \| `pmf` |
+| `validation_mode` | `prove`（当てにいく） \| `explore`（出会う） |
+
 #### ⚠️ 検証キャンバスの `sections` フォーマット（必読）
 
 UIは **Why/How/What ウィザード** 形式。`sections` にフラットなデータを入れても表示されない。
@@ -94,8 +106,7 @@ UIは **Why/How/What ウィザード** 形式。`sections` にフラットなデ
 {
   "why": {
     "purpose": "この検証の目的",
-    "targetHypothesis": "検証対象の仮説テキスト",
-    "stickyNoteId": null,
+    "hypothesisStatement": "検証対象の仮説テキスト",
     "successMetrics": [
       { "id": "sm1", "type": "quantitative", "description": "指標名", "target": "目標値" },
       { "id": "sm2", "type": "qualitative", "description": "定性的な成功基準" }
@@ -127,32 +138,17 @@ UIは **Why/How/What ウィザード** 形式。`sections` にフラットなデ
 }
 ```
 
+`why.targetHypothesis` と `why.stickyNoteId` は紐付けの欄で、サーバーが `hypothesis_canvas_id` / `sticky_note_id` の値で書く（直接書かない）。
+仮説の本文は `why.hypothesisStatement` に書く。`targetHypothesis` に本文を書いた場合は `hypothesisStatement` が空なら移される。
+
 - **whatセクション** は検証実施後に埋める（作成時は空でOK）
 - `successMetrics[].type` は `"quantitative"` か `"qualitative"`
 - `how.method` は6種の enum 値のみ
 
-##### ⚠️ `sections` は全置換（マージではない）
-
-`update_verification_canvas` に `sections` を渡すと **トップレベルが丸ごと置き換わる**。
-`{ "what": {...} }` だけを渡すと **既存の `why` と `how` は黙って消える**。
-
-部分更新をしたい場合は必ず `get_verification_canvas` で現在値を読み、マージした完全なオブジェクトを渡すこと。
-
-また、**未知のキーはエラーにならず黙って破棄される**。キー名を1文字間違えるだけで内容が失われ、警告も出ない。推測せず上記のスキーマ表に従うこと。
-
-型が混在している点にも注意:
-
-| キー | 型 |
-|------|-----|
-| `what.qualitativeResults` | **文字列** |
-| `what.quantitativeResults` | **配列** |
-| `what.nextAction` | **オブジェクト** `{ type, description }` |
-| `what.learnings` | **配列** |
-
 ### Learnings
 | Tool | Description | Required Args |
 |------|-------------|---------------|
-| `add_learning` | ラーニング追加 | `project_id`, `title`, `content` |
+| `add_learning` | ラーニング追加 | `project_id`, `title`, `content?` |
 | `get_learning` | ラーニング詳細 | `learning_id` |
 | `update_learning` | ラーニング更新 | `learning_id` |
 | `delete_learning` | ラーニング削除 | `learning_id` |
@@ -168,7 +164,7 @@ UIは **Why/How/What ウィザード** 形式。`sections` にフラットなデ
 | `list_personas` | ペルソナ一覧 | `project_id` |
 | `create_persona` | ペルソナ作成 | `project_id`, `name` |
 | `get_interview_records` | インタビュー記録取得 | `project_id` |
-| `create_interview` | インタビュー作成 | `project_id`, `title` |
+| `create_interview` | インタビュー作成（実施日 `date` は YYYY-MM-DD で省略時は UTC の今日、`duration_minutes` は 1〜1440 分） | `project_id`, `title`, `date?`, `duration_minutes?` |
 
 ペルソナ注意: フィールドは `occupation`（`role` ではない）。`goals`/`frustrations`/`behaviors` は text[]。
 インタビュー注意: `title` は **必須**。`key_insights`/`quotes`/`tags` は `text[]`。
@@ -182,7 +178,7 @@ UIは **Why/How/What ウィザード** 形式。`sections` にフラットなデ
 | `update_roadmap_item` | アイテム更新 | `project_id`, `item_id` |
 
 - フェーズ status: `planning` | `in_progress` | `done`
-- アイテム status: `idea` | `planned` | `in_progress` | `done` | `cancelled`
+- アイテム status: `idea` | `planned` | `in_progress` | `done` | `dropped`
 - アイテム priority (MoSCoW): `must` | `should` | `could` | `wont`
 - アイテム effort: `small` | `medium` | `large`
 - リンク: `hypothesis_id`, `learning_id` で仮説・ラーニングと紐付け可能
@@ -190,7 +186,7 @@ UIは **Why/How/What ウィザード** 形式。`sections` にフラットなデ
 ### Journey Maps
 | Tool | Description | Required Args |
 |------|-------------|---------------|
-| `list_journey_maps` | ジャーニーマップ一覧 | `project_id` |
+| `list_journey_maps` | ジャーニーマップ一覧（`create_journey_map` で保存した `stages` の中身も返す） | `project_id` |
 | `create_journey_map` | ジャーニーマップ作成 | `project_id`, `title` |
 
 ### Decision Logs (意思決定ログ)
@@ -216,13 +212,37 @@ UIは **Why/How/What ウィザード** 形式。`sections` にフラットなデ
 ]
 ```
 
+### Decision Requests (判断依頼)
+これからオーナーに決めてもらう問い。事後に記録する意思決定ログとは別物で、回答されても `decision_logs` には自動で入らない。回答はオーナーが Web か Slack で行い、MCP からは回答できない。
+
+| Tool | Description | Required Args |
+|------|-------------|---------------|
+| `create_decision_request` | 判断依頼を起票（同じ `source_ref` の open があれば既存を返す） | `project_id`, `title` |
+| `list_decision_requests` | 判断依頼一覧（`status`、`format: "json"` 可） | `project_id` |
+| `get_decision_request` | 判断依頼詳細（`format: "json"` 可） | `project_id`, `request_id` |
+| `acknowledge_decision_request` | 回答を受けて何をしたかを添えて受領済みにする。期限切れの default がある open も受領でき、default が回答として確定する | `project_id`, `request_id`, `note` |
+| `cancel_decision_request` | open の判断依頼を取り消す | `project_id`, `request_id` |
+| `post_slack_notification` | project の Slack 投稿先に 1 回きりの通知を送る。回答は求めない。`kind` は `alert`（人が動く必要がある異常。owner をメンション）/ `milestone`（節目。メンションしない）。投稿先が未設定ならエラーにせず送らなかったと返す | `project_id`, `kind`, `title`, `body?`, `url?` |
+
+status は `open` → `answered`（オーナーが回答）→ `acknowledged`（ループが受領）と進む。`open` は `cancelled` にもできる。
+
+選択肢 (`options`) フォーマット（6 件まで。0 件なら自由記述だけで答える依頼）:
+```json
+[
+  { "key": "monthly", "label": "月額", "description": "初期費用を抑える" },
+  { "key": "yearly", "label": "年額" }
+]
+```
+`default_option_key` を付けるときは 24 時間以上先の `due_at` が必要（ループが期限をすぐ先にして自分の default を確定できないようにするため）。`format: "json"` の出力は `id`、`status`、`answer_option_key`、`answer_option_label`、`answer_comment`、`answer_via`（`web` / `slack` / `default`）、`due_at`、`default_option_key`、`source_ref` を含む。
+
 ### Team Collaboration - Members
 | Tool | Description | Required Args |
 |------|-------------|---------------|
-| `list_members` | プロジェクトメンバー一覧 | `project_id` |
-| `invite_member` | メンバーを招待（user_idとrole指定） | `project_id`, `user_id`, `role` |
+| `list_members` | プロジェクトメンバー一覧（オーナーには未承諾のメール招待の id・メール・ロール・期限も） | `project_id` |
+| `invite_member` | メンバーをメールで招待（`email` と `role` を指定。`role` は `editor` \| `viewer`） | `project_id`, `email`, `role` |
 | `update_member_role` | メンバーの権限を更新（オーナーのみ） | `project_id`, `member_id`, `role` |
 | `remove_member` | メンバーを削除 | `project_id`, `member_id` |
+| `revoke_email_invitation` | 未承諾のメール招待を取り消す（オーナーのみ。外したメンバー宛ての招待は remove_member が自動で消す） | `project_id`, `invitation_id` |
 
 ロール: `owner` | `editor` | `viewer`
 ステータス: `pending` | `accepted`
@@ -259,17 +279,44 @@ UIは **Why/How/What ウィザード** 形式。`sections` にフラットなデ
 
 ### 付箋（Sticky Notes）
 
-| ツール名 | 説明 | 必須パラメータ | オプション |
-|----------|------|---------------|-----------|
-| `add_sticky_note` | 仮説キャンバスの付箋を追加 | `canvas_id`, `field_id`, `text` | `color`, `supplementary_note` |
-| `update_sticky_note` | 付箋の内容を更新 | `note_id` | `text`, `color`, `supplementary_note` |
-| `delete_sticky_note` | 付箋を削除 | `note_id` | — |
+| ツール名 | 説明 | パラメータ（`?` は任意） |
+|----------|------|---------------|
+| `add_sticky_note` | 仮説キャンバスの付箋を追加 | `canvas_id`, `field_id`, `text`, `color?`, `supplementary_note?` |
+| `update_sticky_note` | 付箋の内容を更新 | `note_id`, `text?`, `color?`, `supplementary_note?` |
+| `delete_sticky_note` | 付箋を削除 | `note_id` |
 
 ### 検証キャンバス（追加操作）
 
 | ツール名 | 説明 | 必須パラメータ |
 |----------|------|---------------|
 | `delete_verification_canvas` | 検証キャンバスを削除 | `canvas_id` |
+
+### 実験バックログ（Experiment Backlog）
+
+仮説・検証・学び・意思決定から「次にやる実験」を優先度順に積むバックログ。
+
+| ツール名 | 説明 | 必須パラメータ |
+|----------|------|---------------|
+| `list_backlog_items` | 実験バックログを優先度順に取得 | `project_id` |
+| `create_backlog_item` | バックログアイテムを作成 | `project_id`, `title` |
+| `update_backlog_item` | バックログアイテムを更新 | `project_id`, `item_id` |
+
+共通オプション:
+
+- `type`: `experiment` / `feature` / `research` / `interview` / `analysis` / `improvement`
+- `status`: `idea` / `prioritized` / `planned` / `running` / `done` / `dropped`
+- `source_type`: `hypothesis` / `verification` / `learning` / `decision` / `manual`（`source_id` で紐付け元を指定）
+- 紐付け: `hypothesis_canvas_id`, `verification_canvas_id`, `learning_id`
+- スコア: `impact`, `confidence`, `effort`, `risk`（いずれも 1〜5）
+- その他: `description`, `reason`, `expected_learning`, `success_criteria`, `owner`, `due_date`
+- `list_backlog_items` は `status` / `source_type` で絞り込み、`limit` で件数指定が可能
+
+### Analytics
+
+| ツール名 | 説明 | パラメータ（`?` は任意） |
+|----------|------|---------------|
+| `get_mcp_tool_analytics_summary` | MCP ツール呼び出しの集計・`decisionSignals`・`recommendations` を取得（`days` は 1〜90、default 30） | `days?` |
+| `get_activation_analytics_summary` | 自分のプロジェクトの activation 集計（`activation_daily_summary`, `canvas_first_note_timing` 等。`days` は 1〜90、default 30） | `days?` |
 
 ---
 

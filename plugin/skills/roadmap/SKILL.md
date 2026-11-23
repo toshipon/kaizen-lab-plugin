@@ -16,7 +16,7 @@ Run `/kaizen-lab:roadmap` to see what's planned, add a new phase or item after p
 1. Use `list_projects` to find the active project.
 2. Call `list_roadmap` with that `project_id`.
 3. Display phases in order, with their items grouped underneath:
-   - Show item **status** (`idea` / `planned` / `in_progress` / `done`) with an emoji marker
+   - Show item **status** (`idea` / `planned` / `in_progress` / `done` / `dropped`) with an emoji marker
    - Show **priority** (`must` / `should` / `could` / `wont`)
    - Mark phases with no items as opportunities to break down
 4. Highlight items currently `in_progress` and the next `must` priority item to start.
@@ -43,7 +43,9 @@ If `$ARGUMENTS` starts with `update`:
 ## Field reference
 
 **Phase fields:** `name`, `description`, `target_date`
-**Item fields:** `title`, `description`, `status` (`idea` / `planned` / `in_progress` / `done`), `priority` (`must` / `should` / `could` / `wont`), `effort`
+**Item fields:** `title`, `description`, `status` (`idea` / `planned` / `in_progress` / `done` / `dropped`), `priority` (`must` / `should` / `could` / `wont`), `effort` (`XS` / `S` / `M` / `L` / `XL`)
+
+`cancelled` is accepted as an alias of `dropped` and stored as `dropped`; write `dropped`. Phases have no status argument.
 
 > Defaults when creating: `status=idea`, `priority=should`. Items auto-order to the end of the phase.
 

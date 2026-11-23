@@ -31,7 +31,7 @@ On first use, your browser opens for Google sign-in. Token is issued automatical
 ## What it does
 
 The plugin bundles:
-- **MCP server** — 56 tools for full KaizenLab access (projects, canvases, personas, interviews, verifications, learnings, roadmap)
+- **MCP server** — 70 tools for full KaizenLab access (projects, canvases, personas, interviews, verifications, learnings, roadmap)
 - **Slash commands** — quick workflows for the most common actions
 
 ## MCP Only (no slash commands)
