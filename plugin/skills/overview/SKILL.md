@@ -1,6 +1,6 @@
 ---
 name: overview
-description: Use KaizenLab hypothesis validation platform via MCP. Create projects, hypothesis canvases, personas, AI interviews, verifications, and learnings for PMF validation. Manage team collaboration with role-based access control, member invitations, and project comments. Use when validating business hypotheses, running lean startup cycles, or doing customer development. Also use when the user wants to brainstorm, validate, or test a business idea systematically.
+description: Use KaizenLab hypothesis validation platform via MCP. Create projects, hypothesis canvases, personas, interviews, verifications, and learnings for PMF validation. Manage team collaboration with role-based access control, member invitations, and project comments. Use when validating business hypotheses, running lean startup cycles, or doing customer development. Also use when the user wants to brainstorm, validate, or test a business idea systematically.
 ---
 
 # KaizenLab Overview
@@ -12,8 +12,7 @@ KaizenLab は **仮説検証型のプロダクト開発** を支援するプラ�
 まず「何が分かっていないのか」を明らかにし、最もリスクの高い仮説から順に検証していく。
 KaizenLab はこの **仮説→検証→学び→次の仮説** のサイクルを構造化し、チームの学びを蓄積する。
 
-> このスキルは KaizenLab 全体の使い方を俯瞰するガイド。
-> 個別の操作はコマンドスキル `/kaizen-lab:canvas`, `/kaizen-lab:verify`, `/kaizen-lab:learn`, `/kaizen-lab:roadmap` を使う。
+> Claude Code プラグイン（kaizen-lab-plugin）では、個別の操作にコマンドスキル `/kaizen-lab:canvas`、`/kaizen-lab:verify`、`/kaizen-lab:learn`、`/kaizen-lab:roadmap` を使える。
 
 ---
 
@@ -58,7 +57,6 @@ Lean Canvas をベースに、目的・課題・提供価値・優位性など�
 - 14フィールド: purpose, vision, valueProposition, obviousProblem, latentProblem, means, advantage, metrics, revenueModel, marketSize, situation, trend, alternatives, channel
 - 20分で1枚描けるくらいが適切な粒度
 
-操作は `/kaizen-lab:canvas` を参照。
 **ツール**: `list_canvases`, `get_canvas`, `create_canvas`, `update_canvas`, `delete_canvas`, `add_sticky_note`, `update_sticky_note`, `delete_sticky_note`
 
 #### 👤 ペルソナ（Persona）
@@ -71,7 +69,7 @@ Lean Canvas をベースに、目的・課題・提供価値・優位性など�
 
 ペルソナの **内面的な状態** をモデル化する機能。
 Stanford の HumanLM 論文に基づき、表面的な属性だけでなく心理的次元を定義することで、
-AI 擬似インタビューの応答リアリズムが大幅に向上する。
+AI擬似インタビューの応答リアリズムが大幅に向上する。
 
 - **stances**: トピック別の立場（例: `{ "価格": "コスト意識が非常に高い", "新技術": "慎重だが興味あり" }`）
 - **emotionalTendencies**: 感情的傾向（例: `["変化に不安を感じやすい", "共感力が高い"]`）
@@ -79,7 +77,7 @@ AI 擬似インタビューの応答リアリズムが大幅に向上する。
 - **decisionPattern**: 意思決定パターン（例: `"口コミ重視、比較検討を徹底する慎重派"`）
 - **values**: 核となる価値観（例: `["家族第一", "効率重視", "品質にはお金をかける"]`）
 
-AI 擬似インタビューでは、質問に対してまず State Dimensions から **内部状態（latent state）を推論** し、
+AI擬似インタビューでは、質問に対してまず State Dimensions から **内部状態（latent state）を推論** し、
 その状態に基づいて応答を生成する。これにより「この人ならこう答えるだろう」という
 心理的整合性のある応答が得られる。
 
@@ -97,19 +95,30 @@ AI 擬似インタビューでは、質問に対してまず State Dimensions �
 - セクションで検証項目を構造化（Why/How/What 形式、`references/api.md` 参照）
 - **1つの仮説キャンバスに対して、複数の検証キャンバスを作れる**
   （例: 課題の検証、解決策の検証、チャネルの検証）
+- `create_verification_canvas` / `update_verification_canvas` は `hypothesis_canvas_id` と `sticky_note_id` を受け付ける
+  （付箋はその仮説キャンバスに属するものだけ。update では `null` を渡すと紐付けを解除）
+- `external_id`（1〜120 文字）で外部システム側のレコード ID を持てる。プロジェクト内で一意で、重複すると作成・更新が失敗する。
+  `create_verification_canvas` / `update_verification_canvas`（`null` で解除）に渡し、
+  `list_verification_canvases` の `external_id` で絞り込む。`format: "json"` を付けると sections を含む全フィールドを配列で返す
+- 既存の内容を読むときは `get_verification_canvas` に `format: "json"` を渡す。
+  sections を保存されている形のまま `{why, how, what}` で返す（未保存の既知フィールドは `null`）。
+  既定の markdown 表示は要約で、全フィールドは出ない
+- `update_verification_canvas` の `sections` は**全置換**で、渡さなかったセクションは消える。
+  一部だけ変えるときは `sections_patch` を使う（例: `{what: {qualitativeResults: "...", nextAction: {type, description}}}`）。
+  既存の sections にディープマージし、配列・文字列・`null` は置き換える
 
-操作は `/kaizen-lab:verify` を参照。
 **ツール**: `list_verification_canvases` (`list_verifications` alias), `get_verification_canvas`, `create_verification_canvas`, `update_verification_canvas`, `delete_verification_canvas`, `get_verification_status`
 
-#### 🎙️ インタビュー（Interview）／ AI 擬似インタビュー
+#### 🎙️ インタビュー（Interview）
 
 ペルソナに基づく **顧客インタビュー** の記録。
 AI 擬似インタビュー機能もあり、仮説の初期検証に使える。
 
 - ペルソナと紐付け可能（`persona_id`）
 - ペルソナの State Dimensions を踏まえて AI が「その人ならこう答える」応答を生成
+- 実施日 `date`（YYYY-MM-DD、省略時は UTC の今日）と所要時間 `duration_minutes`（1〜1440 分）を記録できる
 - key_insights, quotes, tags で構造化
-- 定性的な学びの源泉。実インタビュー前の仮説の絞り込みに有効
+- 定性的な学びの源泉
 
 **ツール**: `get_interview_records`, `create_interview`
 
@@ -125,10 +134,9 @@ AI 擬似インタビュー機能もあり、仮説の初期検証に使える�
 - tags で検索・分類可能
 - バグや技術的発見もラーニングとして記録する
 
-操作は `/kaizen-lab:learn` を参照。
 **ツール**: `add_learning`, `get_learning`, `update_learning`, `delete_learning`, `search_learnings`, `analyze_learnings`
 
-> `analyze_learnings`: 蓄積された学びからパターン・矛盾・次のアクションを AI 分析。`analyze_all=true` で全件分析可能。
+> `analyze_learnings`: 蓄積された学びからパターン・矛盾・次のアクションをAI分析。`analyze_all=true` で全件分析可能。
 
 #### 📊 PMF スコア（PMF Score）
 
@@ -147,11 +155,10 @@ AI 擬似インタビュー機能もあり、仮説の初期検証に使える�
 - フェーズ（Phase）: 時間軸での区切り。status: `planning` → `in_progress` → `done`
 - アイテム（Item）: 具体的なタスク/機能
   - priority (MoSCoW): `must` / `should` / `could` / `wont`
-  - status: `idea` → `planned` → `in_progress` → `done` / `cancelled`
+  - status: `idea` → `planned` → `in_progress` → `done` / `dropped`
   - effort: `small` / `medium` / `large`
   - `hypothesis_id`, `learning_id` で仮説・学びと紐付け
 
-操作は `/kaizen-lab:roadmap` を参照。
 **ツール**: `list_roadmap`, `create_roadmap_phase`, `create_roadmap_item`, `update_roadmap_item`
 
 #### 🗺️ ジャーニーマップ（Journey Map）
@@ -173,6 +180,21 @@ AI 擬似インタビュー機能もあり、仮説の初期検証に使える�
 
 **ツール**: `list_decisions`, `get_decision`, `create_decision`, `update_decision`, `delete_decision`
 
+#### 🙋 判断依頼（Decision Request）
+
+自律ループがオーナーにしか下せない判断に当たったら、`create_decision_request` で問いを起票する。
+事後に記録する意思決定ログとは別物で、回答されても `decision_logs` には入らない。
+
+- オーナーは Web か Slack で選択肢を選ぶかコメントを残す。MCP からは回答できない
+- 次の tick で `list_decision_requests`（`status: "answered"`, `format: "json"`）を読み、対応したら `acknowledge_decision_request` に何をしたかを `note` で添える
+- `default_option_key` と `due_at` を付けると、期限を過ぎた依頼は受領時に default が回答として確定する。`due_at` は 24 時間以上先でなければ作成が拒否される
+- 同じ件を毎 tick 起票しないよう `source_ref` を付ける。open な同じ `source_ref` があれば既存が返る
+
+**ツール**: `create_decision_request`, `list_decision_requests`, `get_decision_request`, `acknowledge_decision_request`, `cancel_decision_request`
+
+人が動く必要がある異常は `post_slack_notification` の `kind: alert` で、仮説の計測開始や判定などの節目は `kind: milestone` で、project の Slack 投稿先に知らせる。
+判断依頼と違い回答は求めない。投稿先が未設定なら送らずにそう返る。
+
 ### Phase 5: チームで共有する
 
 #### 👥 メンバー管理（Members）
@@ -185,7 +207,7 @@ AI 擬似インタビュー機能もあり、仮説の初期検証に使える�
 - オーナーとエディターがメンバーを招待可能
 - オーナーのみメンバーの権限変更・削除が可能（自分自身の脱退は誰でも可）
 
-**ツール**: `list_members`, `invite_member`, `update_member_role`, `remove_member`
+**ツール**: `list_members`, `invite_member`, `update_member_role`, `remove_member`, `revoke_email_invitation`
 
 #### 💬 コメント（Comments）
 
@@ -197,6 +219,8 @@ AI 擬似インタビュー機能もあり、仮説の初期検証に使える�
 - `parent_id` で返信構造をサポート
 - オーナーとエディターがコメント作成可能
 - 自分のコメントは編集・削除可能、オーナーは全コメント削除可能
+
+`list_comments` は既定で created_at 昇順の全件を返す。件数が多いスレッドは `order: "desc"` と `limit`（1〜1000）で新しい側から読み、`before` / `after`（created_at の ISO 日時、排他）でページングする
 
 **ツール**: `list_comments`, `get_comment`, `create_comment`, `update_comment`, `delete_comment`
 
@@ -214,12 +238,12 @@ AI 擬似インタビュー機能もあり、仮説の初期検証に使える�
 
 **ツール**: `list_projects`, `create_project`, `delete_project`, `export_project`, `get_dashboard`, `get_changelog`
 
-#### 🤖 AI 分析（AI Analysis）
+#### 🤖 AI分析（AI Analysis）
 
-仮説キャンバスや学びに対して AI 分析を実行し、結果を DB に保存する。
+仮説キャンバスや学びに対してAI分析を実行し、結果をDBに保存する。
 
-- `analyze_competitors`: 仮説キャンバスを元に AI 競合分析を実行（`canvas_id` 指定、`project_id` は自動解決可能）
-- `analyze_learnings`: 蓄積された学びのパターン・矛盾・次のアクションを AI 分析（`analyze_all=true` で全件対象）
+- `analyze_competitors`: 仮説キャンバスを元にAI競合分析を実行（`canvas_id` 指定、`project_id` は自動解決可能）
+- `analyze_learnings`: 蓄積された学びのパターン・矛盾・次のアクションをAI分析（`analyze_all=true` で全件対象）
 
 **ツール**: `analyze_competitors`, `analyze_learnings`
 
@@ -234,8 +258,8 @@ Project
   │     │     └── Learning ──→ 「何が分かったか」
   │     └── (複数の検証を紐付け可能)
   │
-  ├── Persona ──→ 「誰のための仮説か」（State Dimensions で内面をモデル化）
-  │     └── Interview ──→ 「実際に聞いてみた結果」（AI 擬似インタビュー可）
+  ├── Persona ──→ 「誰のための仮説か」
+  │     └── Interview ──→ 「実際に聞いてみた結果」
   │           └── Learning
   │
   ├── Roadmap ──→ 「学びに基づいて何をつくるか」
@@ -272,7 +296,7 @@ Lean Canvas の考え方に準拠: キャンバスは事業全体のスナップ
 
 ## セットアップ
 
-MCP クライアント（Claude Code / Claude Desktop / Cursor 等）から接続：
+MCP クライアント（Claude Desktop / Cursor 等）から接続：
 ```json
 {
   "mcpServers": {
@@ -287,19 +311,19 @@ MCP クライアント（Claude Code / Claude Desktop / Cursor 等）から接�
 ```
 
 - エンドポイント: `POST https://kaizen-lab.buildgeeks.dev/api/mcp`
-- JSON-RPC 2.0 / Bearer token 認証 / ステートレス
+- JSON-RPC 2.0 / Bearer token 認証 / 70ツール / ステートレス
 
 ## API Reference
 
-完全な MCP ツールドキュメント（引数つき）は [references/api.md](references/api.md) を参照。
+See [references/api.md](references/api.md) for complete MCP tool documentation (70 tools with args).
 
 ## DB Column Gotchas
 
-- personas: `occupation`（NOT `role`）、goals/frustrations/behaviors は `text[]`、`state_dimensions` は JSONB（HumanLM-inspired）
-- learnings: `content`（NOT `description`）、tags は `text[]`
-- interview_records: `title`（必須）、key_insights/quotes/tags は `text[]`
-- hypothesis_canvases: `phase` は enum: `ideation`/`problem-validation`/`solution-validation`/`mvp-building`/`growth`
-- projects: `owner_id`（NOT `user_id`）
-- validation_canvases: `name`（NOT `title`）、`sections` は `{why, how, what}` ネスト構造必須（フラット NG）
-- project_members: `status` は `pending`/`accepted`、`role` は `owner`/`editor`/`viewer`、UNIQUE(project_id, user_id)
-- project_comments: `content`（必須）、`field_key`/`thread_id`/`parent_id` は nullable、最大 10000 文字
+- personas: `occupation` (NOT `role`), goals/frustrations/behaviors are `text[]`, `state_dimensions` is JSONB (HumanLM-inspired)
+- learnings: `content` (NOT `description`), tags is `text[]`
+- interview_records: `title` (required), key_insights/quotes/tags are `text[]`
+- hypothesis_canvases: `phase` is enum: `ideation`/`problem-validation`/`solution-validation`/`mvp-building`/`growth`
+- projects: `owner_id` (NOT `user_id`)
+- validation_canvases: `name` (NOT `title`)
+- project_members: `status` is `pending`/`accepted`, `role` is `owner`/`editor`/`viewer`, UNIQUE(project_id, user_id)
+- project_comments: `content` (required), `field_key`/`thread_id`/`parent_id` are nullable, max 10000 chars
